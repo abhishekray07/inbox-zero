@@ -1,0 +1,70 @@
+{
+  "tokens": {
+    "opslane_google_access_token": {
+      "login": "opslane@example.com",
+      "scopes": [
+        "openid",
+        "email",
+        "profile",
+        "https://www.googleapis.com/auth/gmail.modify",
+        "https://www.googleapis.com/auth/gmail.settings.basic"
+      ]
+    }
+  },
+  "google": {
+    "users": [{ "email": "opslane@example.com", "name": "Opslane Tester" }],
+    "oauth_clients": [
+      {
+        "client_id": "emulate-google-client.apps.googleusercontent.com",
+        "client_secret": "emulate-google-secret",
+        "redirect_uris": [
+          "http://localhost:3000/api/auth/callback/google",
+          "http://localhost:3000/api/auth/oauth2/callback/google",
+          "http://localhost:3000/api/google/linking/callback"
+        ]
+      }
+    ],
+    "labels": [
+      {
+        "id": "Label_project",
+        "user_email": "opslane@example.com",
+        "name": "Project Alpha"
+      }
+    ],
+    "messages": [
+      {
+        "id": "msg_opslane_1",
+        "thread_id": "thr_opslane_1",
+        "user_email": "opslane@example.com",
+        "from": "Alice Example <alice@example.com>",
+        "to": "opslane@example.com",
+        "subject": "Quarterly planning notes",
+        "body_text": "Hi, here are the notes from today's planning meeting. Can you review by Friday?",
+        "label_ids": ["INBOX", "UNREAD"],
+        "internal_date": "1735984800000"
+      },
+      {
+        "id": "msg_opslane_2",
+        "thread_id": "thr_opslane_2",
+        "user_email": "opslane@example.com",
+        "from": "Bob Example <bob@example.com>",
+        "to": "opslane@example.com",
+        "subject": "Lunch on Thursday?",
+        "body_text": "Are you free for lunch on Thursday at noon?",
+        "label_ids": ["INBOX"],
+        "internal_date": "1735898400000"
+      },
+      {
+        "id": "msg_opslane_3",
+        "thread_id": "thr_opslane_3",
+        "user_email": "opslane@example.com",
+        "from": "Weekly Digest <newsletter@example.com>",
+        "to": "opslane@example.com",
+        "subject": "This week in product news",
+        "body_text": "Top stories this week. Unsubscribe at any time.",
+        "label_ids": ["INBOX", "UNREAD", "Label_project"],
+        "internal_date": "1735812000000"
+      }
+    ]
+  }
+}

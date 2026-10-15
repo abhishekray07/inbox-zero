@@ -1,0 +1,61 @@
+dockerfile: docker/Dockerfile.prod
+port: 3000
+health_path: /api/health
+services:
+  - type: postgres
+    version: postgres:16
+  - llm
+processes:
+  - name: google-emulator
+    command: npx -y @inbox-zero/emulate@0.14.0 --service google --seed /opslane/emulate.json --port 4002
+    env:
+      PORT: "4002"
+env:
+  # Test-only throwaway values, generated with `openssl rand -hex 32`.
+  NODE_ENV: production
+  DIRECT_URL: postgres://app:app@pg:5432/app
+  NEXT_PUBLIC_BASE_URL: http://localhost:3000
+  NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS: "true"
+  NEXT_PUBLIC_EMAIL_SEND_ENABLED: "true"
+  AUTH_SECRET: fe603404ea97ecbc6d2f90a313afe445311a811708ef74af54ffff48a71e39a9
+  EMAIL_ENCRYPT_SECRET: 27f314a6dc6cdb74a30ae80d62725e6ba0e1bb775e2f066875be0ebc0abfc68c
+  EMAIL_ENCRYPT_SALT: 6cac52b606a267cb0ea189c7ef53673ab223486f6f3eb0ff8b0ba938f2729d89
+  INTERNAL_API_KEY: 6126de7ad7912491bc4dad9275bd9b9b1d49db99656420d45e52daedb7a83be7
+  INTERNAL_API_URL: http://localhost:3000
+  CRON_SECRET: 1137e2bfcdd2b8fa2d67143597dc16dbaaa0ffc762608dfd56d785e9371c8b69
+  API_KEY_SALT: 26c2f031851e0d3fcb599d2c59a0f3daa2afa798cd807a1565a5d64c9f50ab82
+  # Google OAuth and Gmail go to the emulator process (same network namespace).
+  GOOGLE_BASE_URL: http://localhost:4002
+  GOOGLE_CLIENT_ID: emulate-google-client.apps.googleusercontent.com
+  GOOGLE_CLIENT_SECRET: emulate-google-secret
+  GOOGLE_PUBSUB_TOPIC_NAME: opslane-topic
+  GOOGLE_PUBSUB_VERIFICATION_TOKEN: opslane-pubsub-token
+  # Every model role goes to the LLM twin.
+  DEFAULT_LLMS: openai-compatible:opslane-model
+  ECONOMY_LLMS: ""
+  CHAT_LLMS: ""
+  NANO_LLMS: ""
+  DRAFT_LLMS: ""
+  OPENAI_COMPATIBLE_BASE_URL: http://llm-twin:8080/v1
+  OPENAI_COMPATIBLE_MODEL: opslane-model
+  LLM_API_KEY: opslane-test-only
+migrate: /app/docker/scripts/migrate.sh
+seed: NODE_PATH=/app/apps/web/node_modules node /opslane/seed.cjs
+verify_setup:
+  instructions: |
+    Inbox Zero only signs in through Google/Microsoft OAuth, so the seed creates a ready session
+    instead of a password login. Before opening any page, add this cookie for http://localhost:3000
+    (path /, httpOnly, not secure, sameSite Lax):
+      name:  better-auth.session_token
+      value: c1894ea7fd822cddf680b3736063a2223eaa1bd373fb78cde9ce5ccaf8d5d2ff.u2yc2PEE9fAx58qOCGywyeUD2icR4uk%2F1YamgfJ5aaE%3D
+    Then open http://localhost:3000/ and you are signed in as opslane@example.com ("Opslane Tester"),
+    onboarding completed, premium checks bypassed. The account has one Google mailbox,
+    opslane@example.com, served by a local Gmail emulator with a few seeded messages in the inbox.
+    No rules are seeded. AI calls go to a model twin, so AI output is placeholder text.
+notes: |
+  The session token is stored in the Session table by .opslane/seed.cjs; the cookie value is that
+  token signed with AUTH_SECRET (HMAC-SHA256, base64, URL-encoded), as better-auth does. If
+  AUTH_SECRET or the token changes, recompute the cookie.
+  The Gmail emulator (@inbox-zero/emulate, also used by the Playwright suite) is fetched with npx at
+  boot and maps the seeded access token to the seeded mailbox via .opslane/emulate.json.
+  docker/Dockerfile.prod is unchanged.
